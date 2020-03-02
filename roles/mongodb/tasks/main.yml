@@ -1,0 +1,104 @@
+---
+# tasks file for nodeapp
+- name: Create Mongo Secret
+  k8s:
+    definition:
+      kind: Secret
+      apiVersion: v1
+      metadata: 
+        name: '{{meta.name}}'   
+        namespace: '{{meta.namespace}}'
+      stringData: 
+        database-password: '{{dbpassword | string | b64encode}}'
+        database-admin-password : '{{dbadminpasswd | string | b64encode}}'
+
+- name: Create Mongo Service
+  k8s:
+    definition:
+      kind: Service
+      apiVersion: v1
+      metadata: 
+        name: '{{meta.name}}'
+        namespace: '{{meta.namespace}}'
+        annotations: 
+          description: 'Exposes the database server'
+      spec:
+        ports:
+          - name: mongodb
+            port: 27017
+            targetPort: 27017
+        selector: 
+          app: '{{meta.name}}'
+
+- name: Create Mongo Deployment
+  k8s:
+    definition:
+      kind: StatefulSet
+      apiVersion: apps/v1
+      metadata: 
+        name: '{{meta.name}}'
+        namespace: '{{meta.namespace}}'
+        annotations: 
+          description: 'Defines how to deploy the database'
+          template.alpha.openshift.io/wait-for-ready: 'true'
+      spec: 
+        replicas: '{{size}}'
+        selector: 
+          matchLabels:
+            app: '{{meta.name}}'
+        template: 
+          metadata: 
+            name: '{{meta.name}}'
+            labels: 
+              app: '{{meta.name}}'
+          spec: 
+            containers: 
+              - name: mongodb
+                image: '{{image}}'
+                ports: 
+                  - containerPort: 27017
+                env: 
+                  - name: MONGODB_USER
+                    value: '{{dbuser}}'
+                  - name: MONGODB_PASSWORD
+                    valueFrom:
+                      secretKeyRef :
+                        name : '{{meta.name}}'
+                        key : database-password
+                  - name: MONGODB_DATABASE
+                    value: '{{dbname}}'
+                  - name: MONGODB_ADMIN_PASSWORD
+                    valueFrom: 
+                      secretKeyRef:
+                        name: '{{meta.name}}'
+                        key: database-admin-password
+                readinessProbe: 
+                  timeoutSeconds: 1
+                  initialDelaySeconds: 3
+                  exec: 
+                    command: 
+                      - /bin/sh
+                      - '-i'
+                      - '-c'
+                      - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval="quit()"
+                livenessProbe: 
+                  timeoutSeconds: 1
+                  initialDelaySeconds: 30
+                  tcpSocket: 
+                    port: 27017
+                resources: 
+                  limits: 
+                    memory: 500Mi
+                volumeMounts:
+                  - name: '{{meta.name}}-data'
+                    mountPath: /var/lib/mongodb/data
+        volumeClaimTemplates:
+        - metadata:
+            name: '{{meta.name}}-data'
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            storageClassName: "gp2"
+            resources:
+              requests:
+                storage: 1Gi
+  

@@ -1,0 +1,107 @@
+---
+# tasks file for nodeapp     
+- name: Create Mongo Secret
+  k8s:
+    definition:
+      kind: Secret
+      apiVersion: v1
+      metadata: 
+        name: '{{meta.name}}'   
+        namespace: '{{meta.namespace}}'
+      stringData: 
+        database-password: '{{dbpassword | string | b64encode}}'
+        database-admin-password : '{{dbadminpasswd | string | b64encode}}'
+
+- name: Create Node Service
+  k8s:
+    definition:
+      kind: Service
+      apiVersion: v1
+      metadata: 
+        name: '{{meta.name}}'
+        namespace: '{{meta.namespace}}'
+        annotations: 
+          description: 'Exposes and load balances the application pods'
+          service.alpha.openshift.io/dependencies: |
+            name: '{{myappdbname}}'
+            kind: 'Service'
+      spec: 
+        ports:
+        - name: web
+          port: 8080
+          targetPort: 8080
+        selector: 
+          app: '{{meta.name}}'
+#Ingress
+- name: Create Ingress Route
+  k8s:
+    definition:
+      kind: Route
+      apiVersion: v1
+      metadata: 
+        name: '{{meta.name}}'
+        namespace: '{{meta.namespace}}'
+      spec: 
+        host: '{{weburl}}'
+        to: 
+          kind: Service
+          name: '{{meta.name}}'
+
+- name: Start Node Deployment
+  k8s:
+    definition:    
+      kind: Deployment
+      apiVersion: v1
+      metadata: 
+        name: '{{meta.name}}'
+        namespace: '{{meta.namespace}}'
+        annotations:
+          description: 'Defines how to deploy the application server'
+          template.alpha.openshift.io/wait-for-ready: 'true'
+      spec: 
+        replicas: '{{size}}'
+        selector:
+          matchLabels:
+            app: '{{meta.name}}'
+        template:
+          metadata:
+            labels:
+              app: '{{meta.name}}'
+          spec: 
+            containers:
+              - name: nodejs-mongodb
+                image: '{{image}}'
+                ports:
+                  - containerPort: 8080
+                env:
+                  - name: DATABASE_SERVICE_NAME
+                    value: '{{myappdbname}}'
+                  - name: MONGODB_USER
+                    value: '{{dbuser}}'
+                  - name: MONGODB_PASSWORD
+                    valueFrom: 
+                      secretKeyRef : 
+                        name : '{{meta.name}}'
+                        key : database-password
+                  - name: MONGODB_DATABASE
+                    value: '{{dbname}}'
+                  - name: MONGODB_ADMIN_PASSWORD
+                    valueFrom: 
+                      secretKeyRef: 
+                        name: '{{meta.name}}'
+                        key: database-admin-password 
+                readinessProbe: 
+                  timeoutSeconds: 3
+                  initialDelaySeconds: 3
+                  httpGet: 
+                    path: /
+                    port: 8080
+                livenessProbe: 
+                  timeoutSeconds: 3
+                  initialDelaySeconds: 30
+                  httpGet: 
+                    path: /
+                    port: 8080
+                resources: 
+                  limits: 
+                    memory: 3Gi

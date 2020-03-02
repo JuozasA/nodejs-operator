@@ -1,0 +1,10 @@
+---
+- version: v1alpha1
+  group: mongodb.cloud-ninja.name
+  kind: MyAppDB
+  role: /opt/ansible/roles/mongodb
+  
+- version: v1alpha1
+  group: nodejs.cloud-ninja.name
+  kind: MyApp
+  role: /opt/ansible/roles/nodeapp

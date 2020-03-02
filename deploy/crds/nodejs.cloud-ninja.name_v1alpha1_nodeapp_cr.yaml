@@ -1,0 +1,15 @@
+apiVersion: nodejs.cloud-ninja.name/v1alpha1
+kind: MyApp
+metadata:
+  name: myapp-nodeapp
+  namespace: nodeapp
+spec:
+  # Add fields here
+  size: 1
+  dbname: sampledb
+  dbuser: mongo-user
+  dbpassword: mongo-password
+  dbadminpasswd: super-admin
+  myappdbname: mongodb
+  weburl: app.apps.ocp.33b5.sandbox816.opentlc.com
+  image: image-registry.openshift-image-registry.svc:5000/openshift/node:latest
