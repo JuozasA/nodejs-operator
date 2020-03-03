@@ -22,7 +22,7 @@ where
 
 ## Build and Push operator image to container registry
 
-Edit Node.js CustomResource so it uses the correct Node.js image from your private repo:
+Edit Node.js CustomResource so it uses the correct Node.js image from your private repo. Add/Create you private registry secret and add the name in the CR as well:
 ```
 $ vim deploy/crds/poc.cloud-ninja.name_v1alpha1_poc_cr.yaml
 apiVersion: poc.cloud-ninja.name/v1alpha1
@@ -53,8 +53,6 @@ $ docker push quay.io/example/myapp-operator:v0.0.1
 ## Deploy Operator
 
 Make sure operator.yaml containers are pointing to the correct operator image tag!
-
-Create you private registry secret and add the name to the CRs (Node.js and MongoDB)
 
 Create resources:
 
