@@ -12,8 +12,8 @@ Follow the steps in the [installation guide][install-guide] to learn how to inst
 
 ## Build and Push operator image to container registry
 ```
-$ operator-sdk build quay.io/example/memcached-operator:v0.0.1
-$ docker push quay.io/example/memcached-operator:v0.0.1
+$ operator-sdk build quay.io/example/myapp-operator:v0.0.1
+$ docker push quay.io/example/myapp-operator:v0.0.1
 ```
 
 ## Deploy Operator
@@ -31,6 +31,13 @@ $ oc create -f deploy/operator.yaml
 $ oc create -f deploy/crds/mongodb.cloud-ninja.name_v1alpha1_nodeapp_cr.yaml
 $ oc create -f deploy/crds/nodejs.cloud-ninja.name_v1alpha1_nodeapp_cr.yaml
 ```
+
+## Delete application
+```
+$ oc delete mongodb mongodb
+$ oc delete nodejs myapp-nodeapp
+```
+
 
 [operator-scope]:./../operator-scope.md
 [install-guide]: ../user/install-operator-sdk.md
