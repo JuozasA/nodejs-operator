@@ -1,6 +1,6 @@
 ---
 # tasks file for nodeapp
-- name: Create Mongo Secret
+- name: Create MongoDB Secret
   k8s:
     definition:
       kind: Secret
@@ -12,7 +12,7 @@
         database-password: '{{dbpassword | string | b64encode}}'
         database-admin-password : '{{dbadminpasswd | string | b64encode}}'
 
-- name: Create Mongo Service
+- name: Create MongoDB Service
   k8s:
     definition:
       kind: Service
@@ -22,6 +22,8 @@
         namespace: '{{meta.namespace}}'
         annotations: 
           description: 'Exposes the database server'
+        labels:
+          app: '{{meta.name}}'
       spec:
         ports:
           - name: mongodb
@@ -30,7 +32,30 @@
         selector: 
           app: '{{meta.name}}'
 
-- name: Create Mongo Deployment
+- name: Create headless MongoDB Service
+  k8s:
+    definition:
+      kind: Service
+      apiVersion: v1
+      metadata:
+        name: '{{meta.name}}-internal'
+        namespace: '{{meta.namespace}}'
+        annotations: 
+          description: 'For internal mongodb pod to pod communication'
+        labels:
+          app: '{{meta.name}}'
+        annotations:
+          service.alpha.kubernetes.io/tolerate-unready-endpoints: 'true'
+      spec:
+        clusterIP: None
+        ports:
+          - name: mongodb
+            port: 27017
+        selector:
+          app: '{{meta.name}}'
+
+
+- name: Create Mongo StatefulSet
   k8s:
     definition:
       kind: StatefulSet
@@ -43,6 +68,7 @@
           template.alpha.openshift.io/wait-for-ready: 'true'
       spec: 
         replicas: '{{size}}'
+        serviceName: '{{meta.name}}-internal'
         selector: 
           matchLabels:
             app: '{{meta.name}}'
@@ -57,6 +83,8 @@
                 image: '{{image}}'
                 ports: 
                   - containerPort: 27017
+                args:
+                  - 'run-mongod-replication'
                 env: 
                   - name: MONGODB_USER
                     value: '{{dbuser}}'
@@ -72,15 +100,19 @@
                       secretKeyRef:
                         name: '{{meta.name}}'
                         key: database-admin-password
+                  - name: MONGODB_REPLICA_NAME
+                    value: 'rs0'
+                  - name: MONGODB_KEYFILE_VALUE
+                    value: '12345678901234567890'
+                  - name: MONGODB_SERVICE_NAME
+                    value: '{{meta.name}}-internal'
                 readinessProbe: 
                   timeoutSeconds: 1
                   initialDelaySeconds: 3
                   exec: 
                     command: 
-                      - /bin/sh
-                      - '-i'
-                      - '-c'
-                      - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval="quit()"
+                      - stat
+                      - /tmp/initialized
                 livenessProbe: 
                   timeoutSeconds: 1
                   initialDelaySeconds: 30
