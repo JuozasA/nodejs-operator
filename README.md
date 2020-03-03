@@ -10,22 +10,49 @@ demo app with ansible operator
 
 Follow the steps in the [installation guide][install-guide] to learn how to install the Operator SDK CLI tool.
 
-## Build and Push operator image to container registry
-```
-$ operator-sdk build quay.io/example/myapp-operator:v0.0.1
-$ docker push quay.io/example/myapp-operator:v0.0.1
-```
-
-## Build nodejs image with template
+## Build Node.js image with template and push to private registry
 ```
 oc process -f nodejs-build-template.json -p PRIVATE_REG=<> -p REGISTRY_SECRET=<> -p REGISTRY_SECRET_NAME=<>  | oc create -f -
 ```
 where
-- PRIVATE_REG              Private Regsitry URL, e.g. private.registry.com/org/private-image:latest                                                                                               
+- PRIVATE_REG              Private Regsitry URL, e.g. quay.io/org/private-image:latest                                                                                               
 - REGISTRY_SECRET          Private Regsitry Secret (username:password in base64 format)
 - REGISTRY_SECRET_NAME     Name of Private Registry Secret
 
+
+## Build and Push operator image to container registry
+
+Edit Node.js CustomResource so it uses the correct Node.js image from your private repo:
+```
+$ vim deploy/crds/poc.cloud-ninja.name_v1alpha1_poc_cr.yaml
+apiVersion: poc.cloud-ninja.name/v1alpha1
+kind: PoC
+metadata:
+  name: nodejs
+  namespace: myapp
+spec:
+  # Add fields here
+  size: 1
+  dbname: sampledb
+  dbuser: mongo-user
+  dbpassword: mongo-password
+  dbadminpasswd: super-admin
+  myappdbname: mongodb
+  weburl: app.apps.ocp.33b5.sandbox816.opentlc.com
+  image: quay.io/org/private-image:latest     # Here
+```
+## Build Operator Image and Push to private registry
+
+```
+$ operator-sdk build quay.io/example/myapp-operator:v0.0.1
+$ docker login quay.io
+$ docker push quay.io/example/myapp-operator:v0.0.1
+```
+
 ## Deploy Operator
+
+Make sure operator.yaml containers are pointing to the correct operator image tag!
+
 ```
 $ oc create -f deploy/service_account.yaml
 $ oc adm policy add-scc-to-user privileged system:serviceaccount:<namespace>:myapp-operator
