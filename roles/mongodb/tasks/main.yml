@@ -40,8 +40,6 @@
       metadata:
         name: '{{meta.name}}-internal'
         namespace: '{{meta.namespace}}'
-        annotations: 
-          description: 'For internal mongodb pod to pod communication'
         labels:
           app: '{{meta.name}}'
         annotations:
@@ -55,7 +53,7 @@
           app: '{{meta.name}}'
 
 
-- name: Create Mongo StatefulSet
+- name: Create MongoDB StatefulSet
   k8s:
     definition:
       kind: StatefulSet
@@ -124,6 +122,8 @@
                 volumeMounts:
                   - name: '{{meta.name}}-data'
                     mountPath: /var/lib/mongodb/data
+            imagePullSecrets:
+              - name: '{{regsecret}}'
         volumeClaimTemplates:
         - metadata:
             name: '{{meta.name}}-data'
