@@ -108,7 +108,7 @@
           "script": "npm test"
         }
       }
-    },
+    }
   ],
   "parameters": [
     {
@@ -180,13 +180,13 @@
       "name": "REGISTRY_SECRET",
       "displayName": "Private Regsitry Secret",
       "description": "Private Regsitry Secret",
-      value: ""
+      "value": ""
     },
     {
       "name": "REGISTRY_SECRET_NAME",
       "displayName": "Private Regsitry Secret name",
       "description": "Private Regsitry Secret name",
-      value: ""
-    },
+      "value": ""
+    }
   ]
 }
