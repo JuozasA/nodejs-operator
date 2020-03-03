@@ -16,6 +16,15 @@ $ operator-sdk build quay.io/example/myapp-operator:v0.0.1
 $ docker push quay.io/example/myapp-operator:v0.0.1
 ```
 
+## Build nodejs image with template
+```
+oc process -f nodejs-build-template.json -p PRIVATE_REG=<> -p REGISTRY_SECRET=<> -p REGISTRY_SECRET_NAME=<>  | oc create -f -
+```
+where
+- PRIVATE_REG              Private Regsitry URL, e.g. private.registry.com/org/private-image:latest                                                                                               
+- REGISTRY_SECRET          Private Regsitry Secret (username:password in base64 format)
+- REGISTRY_SECRET_NAME     Name of Private Registry Secret
+
 ## Deploy Operator
 ```
 $ oc create -f deploy/service_account.yaml
