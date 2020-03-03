@@ -40,6 +40,7 @@ spec:
   myappdbname: mongodb
   weburl: app.apps.ocp.33b5.sandbox816.opentlc.com
   image: quay.io/org/private-image:latest     # Here
+  regsecret: registry-pull-secret
 ```
 ## Build Operator Image and Push to private registry
 
@@ -52,6 +53,10 @@ $ docker push quay.io/example/myapp-operator:v0.0.1
 ## Deploy Operator
 
 Make sure operator.yaml containers are pointing to the correct operator image tag!
+
+Create you private registry secret and add the name to the CRs (Node.js and MongoDB)
+
+Create resources:
 
 ```
 $ oc create -f deploy/service_account.yaml
