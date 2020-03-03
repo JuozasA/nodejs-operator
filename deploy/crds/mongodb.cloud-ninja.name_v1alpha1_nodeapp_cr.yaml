@@ -10,4 +10,5 @@ spec:
   dbuser: mongo-user
   dbpassword: mongo-password
   dbadminpasswd: super-admin
-  image: image-registry.openshift-image-registry.svc:5000/openshift/mongodb:3.6
+  image: quay.io/jauskaln/nodejs:10
+  regsecret: registry-pull-secret
