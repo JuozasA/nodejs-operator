@@ -12,4 +12,5 @@ spec:
   dbadminpasswd: super-admin
   myappdbname: mongodb
   weburl: app.apps.ocp.33b5.sandbox816.opentlc.com
-  image: image-registry.openshift-image-registry.svc:5000/openshift/node:latest
+  image: quay.io/jauskaln/nodejs:10
+  regsecret: registry-pull-secret
