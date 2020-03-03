@@ -1,6 +1,6 @@
 ---
 # tasks file for nodeapp     
-- name: Create Mongo Secret
+- name: Create MongoDB access Secret
   k8s:
     definition:
       kind: Secret
@@ -12,7 +12,7 @@
         database-password: '{{dbpassword | string | b64encode}}'
         database-admin-password : '{{dbadminpasswd | string | b64encode}}'
 
-- name: Create Node Service
+- name: Create Node.js Service
   k8s:
     definition:
       kind: Service
@@ -47,7 +47,7 @@
           kind: Service
           name: '{{meta.name}}'
 
-- name: Start Node Deployment
+- name: Start Node.js Deployment
   k8s:
     definition:    
       kind: Deployment
@@ -90,6 +90,8 @@
                       secretKeyRef: 
                         name: '{{meta.name}}'
                         key: database-admin-password 
+            imagePullSecrets:
+              - name: '{{regsecret}}'
                 readinessProbe: 
                   timeoutSeconds: 3
                   initialDelaySeconds: 3
