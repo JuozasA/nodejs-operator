@@ -80,9 +80,9 @@
             "kind": "DockerImage",
             "name": "${PRIVATE_REG}"
           },
-          {
-          "pushSecret": "${REGISTRY_SECRET_NAME}"
-          },
+          "pushSecret": {
+            "name": "${REGISTRY_SECRET_NAME}"
+          }
         },
         "triggers": [
           {
